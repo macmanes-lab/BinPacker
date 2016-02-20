@@ -1,0 +1,121 @@
+================
+ Description
+================
+                                                                                  
+ BinPacker is an efficient de novo trascriptome assembler for RNA-Seq data. It can assemble 
+ all transcripts from short reads (single or paired) without using a reference.  
+ The software expects as input RNA-Seq reads in fasta or fastq format, and ouput all
+ assembled candidate transcripts in fasta format. Briefly, it works in two step: first,
+ BinPacker partitions the sequence data into many individual splicing graphs, each capturing 
+ the full transcriptional complexity at a given gene or no more than a few genes. Then, 
+ BinPacker uses variants of the traditional bins packing model to search for minimum edge-path-cover
+ over the splicng graph that can be supported by our data and could explain all observed 
+ splicing events of each locus.
+
+ This software is free to use, modify, redistribute without any restrictions, 
+ except including the license provided with the distribution. 
+
+
+================
+ Installation
+================
+
+ Building BinPacker
+
+  a) Unpack the BinPacker and change to the BinPacker direcotry.
+
+       $ tar zxvf BinPacker_binary.tar.gz
+       $ cd BinPacker_binary
+
+  b) Make BinPacker.
+
+       $ ./update
+
+
+=====================
+Test the installation
+=====================
+
+Test data are provided with sofeware distribution in the sample_test directory.
+
+       $ ./runMe.sh
+
+
+===============
+ Uasge
+===============
+    
+BinPacker v1.0 usage:
+    
+** Required **
+    
+-s <string>: type of reads: ( fa or fq ).
+
+-p <string>: type of sequencing: ( pair or single ).
+    
+If paired_end reads:
+   -l <string>: left reads.
+   -r <string>: right reads.
+    
+If single_end reads:
+   -u <string>: single reads.
+    
+---------------------------------------------------------------------------
+    
+** Options **
+    
+-o <string>: name of directory for output, default: ./BinPacker_Out_Dir/
+    
+-m <string>: strand-specific RNA-Seq reads orientation, default: double_stranded_mode.
+             if paired_end: RF or FR;
+             if single_end: F or R.
+    
+-k <int>: length of kmer, default:25.
+    
+-g <int>: gap length of paired reads, default: 200.
+    
+-S <int>: minimum coverage of kmer as a seed, default: 2.
+    
+-E <float>: minimum entropy of kmer as a seed, default: 1.5.
+    
+-C <int>: minimum coverage of kmer used to extend, default: 1.
+    
+-N <float>: minimum entroy of kmer used to extend, default: 0.0.
+    
+-J <int>: minimum of the coverage of a junction, default: 2.
+    
+-v: report the current version of BinPacker and exit.
+    
+** Note **
+A typical command of BinPacker might be:
+    
+BinPacker -s fq -p pair -l reads.left.fq -r reads.right.fq
+    
+(If your data are strand-strand, it is recommended to set -m option.)
+    
+
+================
+ Changelog
+================
+
+ Version 1.0
+ - latest version
+
+
+===============
+ Authors
+===============
+
+ Juntao Liu designed and wrote BinPacker, with substantial technical input
+ from Zheng Chang.  
+
+
+================
+ Contact
+================
+
+ Any questions, problems, bugs are welcome and should be dumped to
+ Juntao Liu <juntaosdu@126.com>
+
+ Created on August 25, 2014.
+ 

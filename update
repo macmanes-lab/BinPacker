@@ -1,0 +1,12 @@
+#!/bin/bash
+basepath=$(cd `dirname $0`; pwd)
+cd $basepath/boost_1_47_0/
+./bootstrap.sh
+./b2 install --prefix=$basepath/Boost/
+cd ..
+cd glpk-4.40
+./configure
+cd ..
+./configure --with-boost=$basepath/Boost/
+make
+

@@ -1,0 +1,359 @@
+#!/bin/bash
+shellpath=`dirname $0`
+export LD_LIBRARY_PATH=$shellpath/Boost/lib:$LD_LIBRARY_PATH
+rm New_Splicing_Graph.txt Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
+rm -rf BinPacker_Out_Dir 2>log_temp
+mode="double_stranded_mode"
+pair="No_input"
+kmer=25
+gap=200
+min_seed_coverage=2
+min_seed_entropy=1.5
+min_kmer_coverage=1
+min_kmer_entropy=0.0
+min_junction_coverage=2
+seqType="No_input"
+left_reads="No_input"
+right_reads="No_input"
+single_reads="No_input"
+Dir=$(pwd)
+while getopts "s:l:r:m:p:k:g:u:o:S:E:C:N:T:vh" arg
+do
+	case $arg in
+	s)
+	    seqType=$OPTARG
+		;;
+	l)
+	    left_reads=$OPTARG
+		;;
+	r)
+	    right_reads=$OPTARG
+		;;
+	m)
+	    mode=$OPTARG
+		;;
+	p)
+	    pair=$OPTARG
+		;;
+	k)
+	    kmer=$OPTARG
+ 	   	;;
+  	g)
+      	    gap=$OPTARG
+		;;
+	u)
+	    single_reads=$OPTARG
+		;;
+	o)
+	    Dir=$OPTARG
+		;;
+	S)
+	    min_seed_coverage=$OPTARG
+		;;
+	E)
+	    min_seed_entropy=$OPTARG
+                ;;
+	C)
+	    min_kmer_coverage=$OPTARG
+                ;;
+	N)
+	    min_kmer_entropy=$OPTARG
+                ;;
+	J)
+	    min_junction_coverage=$OPTARG
+                ;;
+	v)
+	    echo "    "
+	    echo "** The current version of BinPacker is v1.0 **"
+	    echo "    "
+	    exit 1
+		;;
+	h)
+	    echo "    "
+	    echo "==========================================================================="
+	    echo "    "
+	    echo "BinPacker v1.0 usage:"
+	    echo "    "
+	    echo "** Required **"
+	    echo "    "
+	    echo "-s <string>: type of reads: ( fa or fq )."
+	    echo "    "
+	    echo "-p <string>: type of sequencing: ( pair or single )."
+	    echo "    "
+	    echo "If paired_end reads:"
+	    echo "   -l <string>: left reads."
+	    echo "   -r <string>: right reads."
+	    echo "    "
+	    echo "If single_end reads:"
+	    echo "   -u <string>: single reads."
+	    echo "    "
+	    echo "---------------------------------------------------------------------------"
+	    echo "    "
+	    echo "** Options **"
+	    echo "    "
+	    echo "-o <string>: name of directory for output, default: ./BinPacker_Out_Dir/"
+	    echo "    "
+	    echo "-m <string>: strand-specific RNA-Seq reads orientation, default: double_stranded_mode."
+	    echo "             if paired_end: RF or FR;"
+	    echo "             if single_end: F or R."
+	    echo "    "
+	    echo "-k <int>: length of kmer, default:25."
+	    echo "    "
+	    echo "-g <int>: gap length of paired reads, default: 200."
+	    echo "    "
+	    echo "-S <int>: minimum coverage of kmer as a seed, default: 2."
+	    echo "    "
+	    echo "-E <float>: minimum entropy of kmer as a seed, default: 1.5."
+	    echo "    "
+	    echo "-C <int>: minimum coverage of kmer used to extend, default: 1."
+	    echo "    "
+	    echo "-N <float>: minimum entroy of kmer used to extend, default: 0.0."
+	    echo "    "
+	    echo "-J <int>: minimum of the coverage of a junction, default: 2."
+	    echo "    "
+	    echo "-v: report the current version of BinPacker and exit."
+	    echo "    "
+	    echo "** Note **"
+	    echo "    "
+	    echo "A typical command of BinPacker might be:"
+	    echo "    "
+	    echo "BinPacker -s fq -p pair -l reads.left.fq -r reads.right.fq"
+	    echo "    "
+    	    echo "(If your data are strand-strand, it is recommended to set -m option.)"
+	    echo "    "
+	    echo "==========================================================================="
+	    exit 1
+		;;
+	esac
+done
+if [ $seqType == "No_input" ]; then
+	echo "    "
+	echo "** Error: data type is not specified! Please type -h option for help! **"
+	echo "    "
+	exit 1
+fi
+if [ $seqType != "fa" -a $seqType != "fq" ]; then
+	echo "    "
+        echo "** Error: Unrecognized data type: $seqType! Please type -h option for help! **"
+	echo "    "
+        exit 1
+fi
+if [ $pair == "No_input" ]; then
+        echo "    "
+        echo "** Error: seuencing type is not specified! Please type -h option for help! **"
+        echo "    "
+        exit 1
+fi
+if [ $pair != "pair" -a $pair != "single" ]; then
+        echo "    "
+        echo "** Error: Unrecognized sequencing type: $pair! Please type -h option for help! **"
+        echo "    "
+        exit 1
+fi
+if [ $single_reads == "No_input" ]; then
+	if [ $left_reads == "No_input" -o $right_reads == "No_input" ]; then
+		echo "    "
+        	echo "** Error: RNA-seq data is not correctly specified! Please type -h option for help! **"
+		echo "    "
+        	exit 1
+	fi
+fi
+if [ $left_reads == "No_input" -a $right_reads == "No_input" ]; then
+	if [ $single_reads == "No_input" ]; then
+		echo "    "
+		echo "** Error: RNA-seq data is not correctly specified! Please type -h option for help! **"
+		echo "    "
+                exit 1
+        fi
+fi
+echo "Processing data..."
+if [ $pair == "pair" ]; then
+  if [ $seqType == "fq" ]; then
+    if [ $mode == "double_stranded_mode" ]; then
+      echo "$shellpath/plugins/fastool/fastool --to-fasta $left_reads >reads.left.fa"
+      $shellpath/plugins/fastool/fastool --to-fasta $left_reads >reads.left.fa
+      echo "$shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa"
+      $shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa
+    fi
+    if [ $mode == "RF" ]; then
+      echo "$shellpath/plugins/fastool/fastool --rev --to-fasta $left_reads >reads.left.fa"
+      $shellpath/plugins/fastool/fastool --rev --to-fasta $left_reads >reads.left.fa
+      echo "$shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa"
+      $shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa
+    fi
+    if [ $mode == "FR" ]; then
+      echo "$shellpath/plugins/fastool/fastool --to-fasta $left_reads >reads.left.fa"
+      $shellpath/plugins/fastool/fastool --to-fasta $left_reads >reads.left.fa
+      echo "$shellpath/plugins/fastool/fastool --rev --to-fasta $right_reads >reads.right.fa"
+      $shellpath/plugins/fastool/fastool --rev --to-fasta $right_reads >reads.right.fa
+    fi
+      echo "cat $left_reads $right_reads >both.fa"
+      cat reads.left.fa reads.right.fa >both.fa
+      rm reads.left.fa reads.right.fa
+  fi
+  if [ $seqType == "fa" ]; then
+    if [ $mode == "double_stranded_mode" ]; then
+    echo "cat $left_reads $right_reads >both.fa"
+    cat $left_reads $right_reads >both.fa
+    fi
+    if [ $mode == "RF" ]; then
+    echo "$shellpath/perllib/revcomp_fasta.pl $left_reads >reads.left.fa"
+    $shellpath/perllib/revcomp_fasta.pl $left_reads >reads.left.fa
+    cat reads.left.fa $right_reads >both.fa
+    fi
+    if [ $mode == "FR" ]; then
+    echo "$shellpath/perllib/revcomp_fasta.pl $right_reads >reads.right.fa"
+    $shellpath/perllib/revcomp_fasta.pl $right_reads >reads.right.fa
+    cat $left_reads reads.right.fa >both.fa
+    fi
+  fi
+fi
+if [ $pair == "single" ]; then
+  if [ $seqType == "fq" ]; then
+    if [ $mode == "double_stranded_mode" ]; then
+      echo "$shellpath/plugins/fastool/fastool --to-fasta $single_reads >single.fa"
+      $shellpath/plugins/fastool/fastool --to-fasta $single_reads >single.fa
+    fi
+    if [ $mode == "F" ]; then
+      echo "$shellpath/plugins/fastool/fastool --to-fasta $single_reads >single.fa"
+      $shellpath/plugins/fastool/fastool --to-fasta $single_reads >single.fa
+    fi
+    if [ $mode == "R" ]; then
+      echo "$shellpath/plugins/fastool/fastool --rev --to-fasta $single_reads >single.fa"
+      $shellpath/plugins/fastool/fastool --rev --to-fasta $single_reads >single.fa
+    fi
+  fi
+  if [ $seqType == "fa" ]; then
+    echo "Copying $single_reads ..."
+    cp $single_reads single.fa
+  fi
+fi
+echo "Processing completele!"
+echo "Constructing Splicing Graph..."
+if [ $pair == "pair" ]; then
+  if [ $mode == "double_stranded_mode" ]; then
+  echo "$shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --$mode --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug"
+  $shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --$mode --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug 2>Assemble.log
+  fi
+  if [ $mode == "RF" ]; then
+  echo "$shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --fr_strand 1 --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug"
+  $shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --fr_strand 1 --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug 2>Assemble.log
+  fi
+  if [ $mode == "FR" ]; then
+  echo "$shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --fr_strand 2 --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug"
+  $shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --fr_strand 2 --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug 2>Assemble.log
+  fi
+fi
+if [ $pair == "single" ]; then
+  echo "$shellpath/src/Assemble --reads single.fa -k $kmer --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug"
+  $shellpath/src/Assemble --reads single.fa -k $kmer --double_stranded_mode --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug 2>Assemble.log
+fi
+rm both.fa single.fa 2>log_temp
+echo "Assembling Transtripts..."
+rm ${PWD}/RawGraphs/raw_graph.list
+out_in_ratio=1.4
+high_ratio=1.5
+for file_a in ${PWD}/RawGraphs/*;
+do
+        temp_file=`basename $file_a`
+        echo "Processing Splicing Graph:" $temp_file "..."
+        low_cov=10.0
+    $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
+        cp New_Splicing_Graph.txt Raw_New_Splicing_Graph.txt
+        cp Line_Graph.txt Raw_Line_Graph.txt
+    N=0
+        num_left=0
+        num_right=0
+        if [ -s Line_Graph.txt -a -e Line_Graph.txt ]; then
+            $shellpath/src/packing_num New_Splicing_Graph.txt Line_Graph.txt left >log || num_left=`cat log`
+            rm log
+            $shellpath/src/packing_num New_Splicing_Graph.txt Line_Graph.txt right >log || num_right=`cat log`
+            rm log
+        fi
+    while [ -s raw_ILP_L.txt -a -e raw_ILP_L.txt ] || [ -s raw_ILP_R.txt -a -e raw_ILP_R.txt ]
+    do
+                if [[ $N -lt $num_left ]] && [ ! -s raw_ILP_L.txt -a -e raw_ILP_L.txt ]; then
+                       $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_R.txt -o result_ILP_R.txt >log
+                        N=$[$N+1]
+                        $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N no $low_cov $out_in_ratio $high_ratio
+                        N=0
+                        rm raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
+                        $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
+                    cp Line_Graph.txt Raw_Line_Graph.txt
+                elif [[ $N -lt $num_right ]] && [ ! -s raw_ILP_R.txt -a -e raw_ILP_R.txt ]; then
+                      $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_L.txt -o result_ILP_L.txt >log
+N=$[$N+1]
+                      $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N no $low_cov $out_in_ratio $high_ratio
+                          N=0 
+                          rm raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
+              $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
+                          cp Line_Graph.txt Raw_Line_Graph.txt
+            else
+                  if [ -s raw_ILP_L.txt -a -e raw_ILP_L.txt ]; then
+                          $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_L.txt -o result_ILP_L.txt >log
+              fi  
+                  if [ -s raw_ILP_R.txt -a -e raw_ILP_R.txt ]; then
+                          $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_R.txt -o result_ILP_R.txt >log
+              fi  
+                  N=$[$N+1]
+                  $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N yes $low_cov $out_in_ratio $high_ratio
+         fi  
+   done
+    $shellpath/src/read_result ./RawGraphs/$temp_file Line_Graph.txt Result_L.txt Result_R.txt BinPacker.fa
+    rm New_Splicing_Graph.txt Line_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
+        low_cov=10000000.0
+    $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
+        cp Line_Graph.txt Raw_Line_Graph.txt
+    N=0 
+        num_left=0
+        num_right=0
+        if [ -s Line_Graph.txt -a -e Line_Graph.txt ]; then
+            $shellpath/src/packing_num New_Splicing_Graph.txt Line_Graph.txt left >log || num_left=`cat log`
+            rm log 
+            $shellpath/src/packing_num New_Splicing_Graph.txt Line_Graph.txt right >log || num_right=`cat log`
+            rm log 
+        fi  
+    while [ -s raw_ILP_L.txt -a -e raw_ILP_L.txt ] || [ -s raw_ILP_R.txt -a -e raw_ILP_R.txt ]
+    do
+                if [[ $N -lt $num_left ]] && [ ! -s raw_ILP_L.txt -a -e raw_ILP_L.txt ]; then
+                        $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_R.txt -o result_ILP_R.txt >log
+                        N=$[$N+1]
+                        $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N no $low_cov $out_in_ratio $high_ratio
+                        N=0 
+                        rm raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
+                        $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
+                    cp Line_Graph.txt Raw_Line_Graph.txt
+                elif [[ $N -lt $num_right ]] && [ ! -s raw_ILP_R.txt -a -e raw_ILP_R.txt ]; then
+                      $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_L.txt -o result_ILP_L.txt >log
+                      N=$[$N+1]
+                      $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N no $low_cov $out_in_ratio $high_ratio
+                          N=0 
+                          rm raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
+              $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
+                          cp Line_Graph.txt Raw_Line_Graph.txt
+            else
+                  if [ -s raw_ILP_L.txt -a -e raw_ILP_L.txt ]; then
+                          $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_L.txt -o result_ILP_L.txt >log
+              fi  
+                  if [ -s raw_ILP_R.txt -a -e raw_ILP_R.txt ]; then
+                          $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_R.txt -o result_ILP_R.txt >log
+              fi  
+                  N=$[$N+1]
+                  $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N yes $low_cov $out_in_ratio $high_ratio
+         fi  
+   done
+    $shellpath/src/read_result ./RawGraphs/$temp_file Line_Graph.txt Result_L.txt Result_R.txt BinPacker.fa
+    rm New_Splicing_Graph.txt Line_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
+done
+awk '!a[$0]++' BinPacker.fa >Packing_dog_temp.fa
+mv Packing_dog_temp.fa BinPacker.fa
+$shellpath/src/change_fasta BinPacker.fa Packing_dog_new_temp.fa
+$shellpath/src/Find_errors Packing_dog_new_temp.fa BinPacker.fa
+rm Packing_dog_new_temp.fa Raw_New_Splicing_Graph.txt log_temp
+rm -rf RawGraphs
+mkdir BinPacker_Out_Dir
+mv BinPacker.fa Assemble.log BinPacker_Out_Dir
+if [ $Dir != $(pwd) ]; then
+  mv BinPacker_Out_Dir $Dir
+fi
+echo "Congratulations! Your job is finished!"
