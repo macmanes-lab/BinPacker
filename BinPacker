@@ -180,6 +180,7 @@ if [ $pair == "pair" ]; then
       $shellpath/plugins/fastool/fastool --rev --to-fasta $left_reads >reads.left.fa
       echo "$shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa"
       $shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa
+      cat reads.left.fa reads.right.fa > both.fa
     fi
     if [ $mode == "FR" ]; then
       echo "$shellpath/plugins/fastool/fastool --to-fasta $left_reads >reads.left.fa"
@@ -187,8 +188,6 @@ if [ $pair == "pair" ]; then
       echo "$shellpath/plugins/fastool/fastool --rev --to-fasta $right_reads >reads.right.fa"
       $shellpath/plugins/fastool/fastool --rev --to-fasta $right_reads >reads.right.fa
     fi
-      echo "cat $left_reads $right_reads >both.fa"
-      cat reads.left.fa reads.right.fa >both.fa
       rm reads.left.fa reads.right.fa
   fi
   if [ $seqType == "fa" ]; then
@@ -248,7 +247,7 @@ if [ $pair == "single" ]; then
   echo "$shellpath/src/Assemble --reads single.fa -k $kmer --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug"
   $shellpath/src/Assemble --reads single.fa -k $kmer --double_stranded_mode --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug 2>Assemble.log
 fi
-rm both.fa single.fa 2>log_temp
+#rm both.fa single.fa 2>log_temp
 echo "Assembling Transtripts..."
 rm ${PWD}/RawGraphs/raw_graph.list
 out_in_ratio=1.4
