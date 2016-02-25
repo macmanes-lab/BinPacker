@@ -1,3 +1,5 @@
-glpnet02.lo: glpnet02.c glpnet.h
+glpnet02.lo: glpnet02.c /usr/include/stdc-predef.h glpnet.h
+
+/usr/include/stdc-predef.h:
 
 glpnet.h:

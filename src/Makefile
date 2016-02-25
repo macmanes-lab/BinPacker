@@ -36,7 +36,7 @@ build_triplet = x86_64-unknown-linux-gnu
 host_triplet = x86_64-unknown-linux-gnu
 bin_PROGRAMS = Assemble$(EXEEXT) change_fasta$(EXEEXT) \
 	Find_errors$(EXEEXT) packing$(EXEEXT) packing_num$(EXEEXT) \
-	read_result$(EXEEXT)
+	read_result$(EXEEXT) BinPacker_denovo$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -62,6 +62,9 @@ Assemble_LDADD = $(LDADD)
 Assemble_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(Assemble_LDFLAGS) $(LDFLAGS) -o $@
+am_BinPacker_denovo_OBJECTS = BinPacker_denovo.$(OBJEXT)
+BinPacker_denovo_OBJECTS = $(am_BinPacker_denovo_OBJECTS)
+BinPacker_denovo_LDADD = $(LDADD)
 am_Find_errors_OBJECTS = Find_errors.$(OBJEXT)
 Find_errors_OBJECTS = $(am_Find_errors_OBJECTS)
 Find_errors_LDADD = $(LDADD)
@@ -99,34 +102,36 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(Assemble_SOURCES) $(Find_errors_SOURCES) \
-	$(change_fasta_SOURCES) $(packing_SOURCES) \
-	$(packing_num_SOURCES) $(read_result_SOURCES)
-DIST_SOURCES = $(Assemble_SOURCES) $(Find_errors_SOURCES) \
-	$(change_fasta_SOURCES) $(packing_SOURCES) \
-	$(packing_num_SOURCES) $(read_result_SOURCES)
+SOURCES = $(Assemble_SOURCES) $(BinPacker_denovo_SOURCES) \
+	$(Find_errors_SOURCES) $(change_fasta_SOURCES) \
+	$(packing_SOURCES) $(packing_num_SOURCES) \
+	$(read_result_SOURCES)
+DIST_SOURCES = $(Assemble_SOURCES) $(BinPacker_denovo_SOURCES) \
+	$(Find_errors_SOURCES) $(change_fasta_SOURCES) \
+	$(packing_SOURCES) $(packing_num_SOURCES) \
+	$(read_result_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
-ACLOCAL = ${SHELL} /home/juntaosdu/juntao/BinPacker_binary/build-aux/missing --run aclocal-1.11
-AMTAR = ${SHELL} /home/juntaosdu/juntao/BinPacker_binary/build-aux/missing --run tar
+ACLOCAL = ${SHELL} /share/BinPacker_1.0/build-aux/missing --run aclocal-1.11
+AMTAR = ${SHELL} /share/BinPacker_1.0/build-aux/missing --run tar
 AR = ar
-AUTOCONF = ${SHELL} /home/juntaosdu/juntao/BinPacker_binary/build-aux/missing --run autoconf
-AUTOHEADER = ${SHELL} /home/juntaosdu/juntao/BinPacker_binary/build-aux/missing --run autoheader
-AUTOMAKE = ${SHELL} /home/juntaosdu/juntao/BinPacker_binary/build-aux/missing --run automake-1.11
+AUTOCONF = ${SHELL} /share/BinPacker_1.0/build-aux/missing --run autoconf
+AUTOHEADER = ${SHELL} /share/BinPacker_1.0/build-aux/missing --run autoheader
+AUTOMAKE = ${SHELL} /share/BinPacker_1.0/build-aux/missing --run automake-1.11
 AWK = gawk
-BOOST_CPPFLAGS = -I/home/juntaosdu/juntao/BinPacker_binary/Boost//include
-BOOST_FILESYSTEM_LDFLAGS = -L/home/juntaosdu/juntao/BinPacker_binary/Boost//lib -Wl,-R/home/juntaosdu/juntao/BinPacker_binary/Boost//lib
-BOOST_FILESYSTEM_LDPATH = /home/juntaosdu/juntao/BinPacker_binary/Boost//lib
+BOOST_CPPFLAGS = -I/home/macmanes/boost_1_60_0/build//include
+BOOST_FILESYSTEM_LDFLAGS = -L/home/macmanes/boost_1_60_0/build//lib -Wl,-R/home/macmanes/boost_1_60_0/build//lib
+BOOST_FILESYSTEM_LDPATH = /home/macmanes/boost_1_60_0/build//lib
 BOOST_FILESYSTEM_LIBS = -lboost_filesystem
-BOOST_LDFLAGS = -L/home/juntaosdu/juntao/BinPacker_binary/Boost//lib
-BOOST_LDPATH = /home/juntaosdu/juntao/BinPacker_binary/Boost//lib
+BOOST_LDFLAGS = -L/home/macmanes/boost_1_60_0/build//lib
+BOOST_LDPATH = /home/macmanes/boost_1_60_0/build//lib
 BOOST_ROOT = 
-BOOST_SERIALIZATION_LDFLAGS = -L/home/juntaosdu/juntao/BinPacker_binary/Boost//lib -Wl,-R/home/juntaosdu/juntao/BinPacker_binary/Boost//lib
-BOOST_SERIALIZATION_LDPATH = /home/juntaosdu/juntao/BinPacker_binary/Boost//lib
+BOOST_SERIALIZATION_LDFLAGS = -L/home/macmanes/boost_1_60_0/build//lib -Wl,-R/home/macmanes/boost_1_60_0/build//lib
+BOOST_SERIALIZATION_LDPATH = /home/macmanes/boost_1_60_0/build//lib
 BOOST_SERIALIZATION_LIBS = -lboost_serialization
-BOOST_SYSTEM_LDFLAGS = -L/home/juntaosdu/juntao/BinPacker_binary/Boost//lib -Wl,-R/home/juntaosdu/juntao/BinPacker_binary/Boost//lib
-BOOST_SYSTEM_LDPATH = /home/juntaosdu/juntao/BinPacker_binary/Boost//lib
+BOOST_SYSTEM_LDFLAGS = -L/home/macmanes/boost_1_60_0/build//lib -Wl,-R/home/macmanes/boost_1_60_0/build//lib
+BOOST_SYSTEM_LDPATH = /home/macmanes/boost_1_60_0/build//lib
 BOOST_SYSTEM_LIBS = -lboost_system
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -136,11 +141,11 @@ CPPFLAGS =
 CXX = g++
 CXXCPP = g++ -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -Wall -Wno-deprecated -g -gdwarf-2 -Wunused -Wuninitialized -m64 -O3 -g -O2 -I/home/juntaosdu/juntao/BinPacker_binary/Boost//include
+CXXFLAGS = -Wall -Wno-deprecated -g -gdwarf-2 -Wunused -Wuninitialized -m64 -O3 -g -O2 -I/home/macmanes/boost_1_60_0/build//include
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
-DISTCHECK_CONFIGURE_FLAGS =  '--with-boost=/home/juntaosdu/juntao/BinPacker_binary/Boost/'
+DISTCHECK_CONFIGURE_FLAGS =  '--with-boost=/home/macmanes/boost_1_60_0/build/'
 DSYMUTIL = 
 DUMPBIN = 
 ECHO_C = 
@@ -165,7 +170,7 @@ LIBTOOL_DEPS = build-aux/ltmain.sh
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /home/juntaosdu/juntao/BinPacker_binary/build-aux/missing --run makeinfo
+MAKEINFO = ${SHELL} /share/BinPacker_1.0/build-aux/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
 NM = /usr/bin/nm -B
 NMEDIT = 
@@ -183,13 +188,13 @@ PATH_SEPARATOR = :
 RANLIB = ranlib
 SED = /bin/sed
 SET_MAKE = 
-SHELL = /bin/sh
+SHELL = /bin/bash
 STRIP = strip
 VERSION = v1.0
-abs_builddir = /home/juntaosdu/juntao/BinPacker_binary/src
-abs_srcdir = /home/juntaosdu/juntao/BinPacker_binary/src
-abs_top_builddir = /home/juntaosdu/juntao/BinPacker_binary
-abs_top_srcdir = /home/juntaosdu/juntao/BinPacker_binary
+abs_builddir = /share/BinPacker_1.0/src
+abs_srcdir = /share/BinPacker_1.0/src
+abs_top_builddir = /share/BinPacker_1.0
+abs_top_srcdir = /share/BinPacker_1.0
 ac_ct_CC = gcc
 ac_ct_CXX = g++
 ac_ct_DUMPBIN = 
@@ -218,7 +223,7 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /home/juntaosdu/juntao/BinPacker_binary/build-aux/install-sh
+install_sh = ${SHELL} /share/BinPacker_1.0/build-aux/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -251,6 +256,7 @@ Find_errors_SOURCES = Find_errors.cc
 packing_SOURCES = line_graph.h write_ILP.h ILP_process.h packing.cc
 packing_num_SOURCES = packing_num.cc
 read_result_SOURCES = read_result.cc
+BinPacker_denovo_SOURCES = BinPacker_denovo.cc get_junction_graph.h get_junction_graph_compulsory.h junction_paths.h recover_paths.h
 all: all-am
 
 .SUFFIXES:
@@ -331,6 +337,9 @@ clean-binPROGRAMS:
 Assemble$(EXEEXT): $(Assemble_OBJECTS) $(Assemble_DEPENDENCIES) 
 	@rm -f Assemble$(EXEEXT)
 	$(Assemble_LINK) $(Assemble_OBJECTS) $(Assemble_LDADD) $(LIBS)
+BinPacker_denovo$(EXEEXT): $(BinPacker_denovo_OBJECTS) $(BinPacker_denovo_DEPENDENCIES) 
+	@rm -f BinPacker_denovo$(EXEEXT)
+	$(CXXLINK) $(BinPacker_denovo_OBJECTS) $(BinPacker_denovo_LDADD) $(LIBS)
 Find_errors$(EXEEXT): $(Find_errors_OBJECTS) $(Find_errors_DEPENDENCIES) 
 	@rm -f Find_errors$(EXEEXT)
 	$(CXXLINK) $(Find_errors_OBJECTS) $(Find_errors_LDADD) $(LIBS)
@@ -359,6 +368,7 @@ include ./$(DEPDIR)/Assemble-kmerhash.Po
 include ./$(DEPDIR)/Assemble-loadreads.Po
 include ./$(DEPDIR)/Assemble-splicing_graph.Po
 include ./$(DEPDIR)/Assemble-utility.Po
+include ./$(DEPDIR)/BinPacker_denovo.Po
 include ./$(DEPDIR)/Find_errors.Po
 include ./$(DEPDIR)/change_fasta.Po
 include ./$(DEPDIR)/packing.Po

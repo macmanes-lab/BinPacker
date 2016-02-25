@@ -20,25 +20,75 @@
  Installation
 ================
 
- Building BinPacker
 
-  a) Unpack the BinPacker and change to the BinPacker direcotry.
+ 1. Installing Boost
 
-       $ tar zxvf BinPacker_binary.tar.gz
-       $ cd BinPacker_binary
+    a) download a version of boost and unpack it.
 
-  b) Make BinPacker.
+       $ wget http://sourceforge.net/projects/boost/files/boost/1.47.0/boost_1_47_0.tar.gz
 
-       $ ./update
+       $ tar zxvf boost_1_47_0.tar.gz
+
+    b) change to the boost directory and run ./bootstrap.sh.
+
+       $ cd  boost_1_47_0
+       $ ./bootstrap.sh
+
+    c) run 
+
+       $ ./b2 install --prefix=<YOUR_BOOST_INSTALL_DIRECTORY>
+       
+       For example,if you want install boost in /home/juntaosdu/local/boost,the commnd is :
+       $ ./b2 install --prefix=/home/juntaosdu/local/boost
+
+       If the boost is installed successfully, you would fild two sub-directories in /home/juntaosdu/local/boost/:
+       /home/juntaosdu/local/boost/include/
+       /home/juntaosdu/local/boost/lib/
+
+      Note: The default Boost installation directory is /usr/local. Take note of the boost installation
+       directory, beacuase you need to tell the BinPacker installer where to find boost later on.
+ 
+    d) Set the LD_LIBRARY_PATH enviroment variable:
+
+       The ~/.bash_profile ($HOME/.bash_profile) or ~/.profile file is executed when you login using console or remotely using ssh.
+       Append the following command to  ~/.bash_profile or ~/.profile file:
+       $ export LD_LIBRARY_PATH=/home/juntaosdu/local/boost/lib:$LD_LIBRARY_PATH
+
+       Save and close the file.
+
+       OR
+
+       just type the command:
+       $ export LD_LIBRARY_PATH=/home/juntaosdu/local/boost/lib:$LD_LIBRARY_PATH
+
+       Note: please replace "/home/juntaosdu/local/boost/lib" with your own directory "<YOUR_BOOST_INSTALL_DIRECTORY>/lib"
+       If you do not set this variable , you would possible see the follwoing error information:
+        "error while loading shared libraries: libboost_serialization.so.1.47.0: cannot open shared object file: No such file or directory"
 
 
-=====================
-Test the installation
-=====================
+ 2. Building BinPacker
+  
+    a) Unpack the BinPacker and change to the BinPacker direcotry.
 
-Test data are provided with sofeware distribution in the sample_test directory.
+       $ tar zxvf BinPacker_1.0.tar.gz
+       $ cd BinPacker_1.0
 
-       $ ./runMe.sh
+    b) Configure BinPacker. If Boost is installed somewhere other than /usr/local, you will need to tell
+       the installer where to find it using --with-boost option.
+
+       $ ./configure --with-boost=/path/to/boost/
+
+       For example, if your boost was installed in /home/juntaosdu/local/boost,the commnd is :
+       $ ./configure --with-boost=/home/juntaosdu/local/boost
+
+    c) Make BinPacker.
+
+       $ make 
+
+
+ 3. Test the installation. Test data are provided with sofeware distribution in the sample_test directory.
+
+     $ ./runMe.sh
 
 
 ===============

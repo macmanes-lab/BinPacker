@@ -1,3 +1,5 @@
-glpqmd.lo: glpqmd.c glpqmd.h
+glpqmd.lo: glpqmd.c /usr/include/stdc-predef.h glpqmd.h
+
+/usr/include/stdc-predef.h:
 
 glpqmd.h:

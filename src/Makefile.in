@@ -36,7 +36,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = Assemble$(EXEEXT) change_fasta$(EXEEXT) \
 	Find_errors$(EXEEXT) packing$(EXEEXT) packing_num$(EXEEXT) \
-	read_result$(EXEEXT)
+	read_result$(EXEEXT) BinPacker_denovo$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -62,6 +62,9 @@ Assemble_LDADD = $(LDADD)
 Assemble_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(Assemble_LDFLAGS) $(LDFLAGS) -o $@
+am_BinPacker_denovo_OBJECTS = BinPacker_denovo.$(OBJEXT)
+BinPacker_denovo_OBJECTS = $(am_BinPacker_denovo_OBJECTS)
+BinPacker_denovo_LDADD = $(LDADD)
 am_Find_errors_OBJECTS = Find_errors.$(OBJEXT)
 Find_errors_OBJECTS = $(am_Find_errors_OBJECTS)
 Find_errors_LDADD = $(LDADD)
@@ -99,12 +102,14 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(Assemble_SOURCES) $(Find_errors_SOURCES) \
-	$(change_fasta_SOURCES) $(packing_SOURCES) \
-	$(packing_num_SOURCES) $(read_result_SOURCES)
-DIST_SOURCES = $(Assemble_SOURCES) $(Find_errors_SOURCES) \
-	$(change_fasta_SOURCES) $(packing_SOURCES) \
-	$(packing_num_SOURCES) $(read_result_SOURCES)
+SOURCES = $(Assemble_SOURCES) $(BinPacker_denovo_SOURCES) \
+	$(Find_errors_SOURCES) $(change_fasta_SOURCES) \
+	$(packing_SOURCES) $(packing_num_SOURCES) \
+	$(read_result_SOURCES)
+DIST_SOURCES = $(Assemble_SOURCES) $(BinPacker_denovo_SOURCES) \
+	$(Find_errors_SOURCES) $(change_fasta_SOURCES) \
+	$(packing_SOURCES) $(packing_num_SOURCES) \
+	$(read_result_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -251,6 +256,7 @@ Find_errors_SOURCES = Find_errors.cc
 packing_SOURCES = line_graph.h write_ILP.h ILP_process.h packing.cc
 packing_num_SOURCES = packing_num.cc
 read_result_SOURCES = read_result.cc
+BinPacker_denovo_SOURCES = BinPacker_denovo.cc get_junction_graph.h get_junction_graph_compulsory.h junction_paths.h recover_paths.h
 all: all-am
 
 .SUFFIXES:
@@ -331,6 +337,9 @@ clean-binPROGRAMS:
 Assemble$(EXEEXT): $(Assemble_OBJECTS) $(Assemble_DEPENDENCIES) 
 	@rm -f Assemble$(EXEEXT)
 	$(Assemble_LINK) $(Assemble_OBJECTS) $(Assemble_LDADD) $(LIBS)
+BinPacker_denovo$(EXEEXT): $(BinPacker_denovo_OBJECTS) $(BinPacker_denovo_DEPENDENCIES) 
+	@rm -f BinPacker_denovo$(EXEEXT)
+	$(CXXLINK) $(BinPacker_denovo_OBJECTS) $(BinPacker_denovo_LDADD) $(LIBS)
 Find_errors$(EXEEXT): $(Find_errors_OBJECTS) $(Find_errors_DEPENDENCIES) 
 	@rm -f Find_errors$(EXEEXT)
 	$(CXXLINK) $(Find_errors_OBJECTS) $(Find_errors_LDADD) $(LIBS)
@@ -359,6 +368,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Assemble-loadreads.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Assemble-splicing_graph.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Assemble-utility.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BinPacker_denovo.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Find_errors.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/change_fasta.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/packing.Po@am__quote@

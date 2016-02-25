@@ -1,12 +1,12 @@
 #!/bin/bash
 shellpath=`dirname $0`
-export LD_LIBRARY_PATH=$shellpath/Boost/lib:$LD_LIBRARY_PATH
-rm New_Splicing_Graph.txt Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
-rm -rf BinPacker_Out_Dir 2>log_temp
+mkdir $(Dir)/RawGraphs
+RunningMode="GLPK"
 mode="double_stranded_mode"
 pair="No_input"
 kmer=25
 gap=200
+duplicate=0
 min_seed_coverage=2
 min_seed_entropy=1.5
 min_kmer_coverage=1
@@ -17,7 +17,7 @@ left_reads="No_input"
 right_reads="No_input"
 single_reads="No_input"
 Dir=$(pwd)
-while getopts "s:l:r:m:p:k:g:u:o:S:E:C:N:T:vh" arg
+while getopts "s:l:r:m:p:k:g:u:o:S:E:C:N:J:qdvh" arg
 do
 	case $arg in
 	s)
@@ -61,7 +61,13 @@ do
                 ;;
 	J)
 	    min_junction_coverage=$OPTARG
+		;;
+	q)
+	    RunningMode="Quick"
                 ;;
+	d)
+	    duplicate=1
+		;;
 	v)
 	    echo "    "
 	    echo "** The current version of BinPacker is v1.0 **"
@@ -90,6 +96,10 @@ do
 	    echo "---------------------------------------------------------------------------"
 	    echo "    "
 	    echo "** Options **"
+	    echo "    "
+	    echo "-q: type -q for quick running mode."
+	    echo "    "
+	    echo "-d: remove duplicated transcripts, at least one of whose ends has both in- and out- edges."
 	    echo "    "
 	    echo "-o <string>: name of directory for output, default: ./BinPacker_Out_Dir/"
 	    echo "    "
@@ -177,10 +187,9 @@ if [ $pair == "pair" ]; then
     fi
     if [ $mode == "RF" ]; then
       echo "$shellpath/plugins/fastool/fastool --rev --to-fasta $left_reads >reads.left.fa"
-      $shellpath/plugins/fastool/fastool --rev --to-fasta $left_reads >reads.left.fa
+      $shellpath/plugins/fastool/fastool --rev --to-fasta $left_reads >$(Dir)/reads.left.fa
       echo "$shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa"
-      $shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa
-      cat reads.left.fa reads.right.fa > both.fa
+      $shellpath/plugins/fastool/fastool --to-fasta $right_reads >$(Dir)/reads.right.fa
     fi
     if [ $mode == "FR" ]; then
       echo "$shellpath/plugins/fastool/fastool --to-fasta $left_reads >reads.left.fa"
@@ -188,7 +197,9 @@ if [ $pair == "pair" ]; then
       echo "$shellpath/plugins/fastool/fastool --rev --to-fasta $right_reads >reads.right.fa"
       $shellpath/plugins/fastool/fastool --rev --to-fasta $right_reads >reads.right.fa
     fi
-      rm reads.left.fa reads.right.fa
+      echo "cat reads.left.fa reads.right.fa >both.fa"
+      cat $(Dir)/reads.left.fa $(Dir)/reads.right.fa >$(Dir)/both.fa
+      rm $(Dir)/reads.left.fa $(Dir)/reads.right.fa
   fi
   if [ $seqType == "fa" ]; then
     if [ $mode == "double_stranded_mode" ]; then
@@ -235,8 +246,10 @@ if [ $pair == "pair" ]; then
   $shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --$mode --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug 2>Assemble.log
   fi
   if [ $mode == "RF" ]; then
+  cd $(Dir)/
   echo "$shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --fr_strand 1 --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug"
   $shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --fr_strand 1 --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug 2>Assemble.log
+  cd ..
   fi
   if [ $mode == "FR" ]; then
   echo "$shellpath/src/Assemble --reads both.fa -k $kmer --pair_end --fr_strand 2 --pair_gap_length $gap --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug"
@@ -247,15 +260,18 @@ if [ $pair == "single" ]; then
   echo "$shellpath/src/Assemble --reads single.fa -k $kmer --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug"
   $shellpath/src/Assemble --reads single.fa -k $kmer --double_stranded_mode --min_seed_coverage $min_seed_coverage --min_seed_entropy $min_seed_entropy --min_kmer_coverage $min_kmer_coverage --min_kmer_entropy $min_kmer_entropy --min_junction_coverage $min_junction_coverage --debug 2>Assemble.log
 fi
-#rm both.fa single.fa 2>log_temp
+rm $(Dir)/both.fa $(Dir)/single.fa 2>$(Dir)/log_temp
 echo "Assembling Transtripts..."
-rm ${PWD}/RawGraphs/raw_graph.list
+rm $(Dir)//RawGraphs/raw_graph.list
+if [ $RunningMode == "GLPK" ]; then
 out_in_ratio=1.4
 high_ratio=1.5
-for file_a in ${PWD}/RawGraphs/*;
+cd $(Dir)/
+for file_a in RawGraphs/*;
 do
         temp_file=`basename $file_a`
         echo "Processing Splicing Graph:" $temp_file "..."
+    if [ $duplicate -eq 0 ]; then
         low_cov=10.0
     $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
         cp New_Splicing_Graph.txt Raw_New_Splicing_Graph.txt
@@ -298,8 +314,9 @@ N=$[$N+1]
                   $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N yes $low_cov $out_in_ratio $high_ratio
          fi  
    done
-    $shellpath/src/read_result ./RawGraphs/$temp_file Line_Graph.txt Result_L.txt Result_R.txt BinPacker.fa
+    $shellpath/src/read_result ./RawGraphs/$temp_file Line_Graph.txt Result_L.txt Result_R.txt BinPacker_temp.fa
     rm New_Splicing_Graph.txt Line_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
+    fi
         low_cov=10000000.0
     $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
         cp Line_Graph.txt Raw_Line_Graph.txt
@@ -341,18 +358,32 @@ N=$[$N+1]
                   $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N yes $low_cov $out_in_ratio $high_ratio
          fi  
    done
-    $shellpath/src/read_result ./RawGraphs/$temp_file Line_Graph.txt Result_L.txt Result_R.txt BinPacker.fa
+    $shellpath/src/read_result ./RawGraphs/$temp_file Line_Graph.txt Result_L.txt Result_R.txt BinPacker_temp.fa
     rm New_Splicing_Graph.txt Line_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
 done
-awk '!a[$0]++' BinPacker.fa >Packing_dog_temp.fa
-mv Packing_dog_temp.fa BinPacker.fa
-$shellpath/src/change_fasta BinPacker.fa Packing_dog_new_temp.fa
-$shellpath/src/Find_errors Packing_dog_new_temp.fa BinPacker.fa
-rm Packing_dog_new_temp.fa Raw_New_Splicing_Graph.txt log_temp
-rm -rf RawGraphs
-mkdir BinPacker_Out_Dir
-mv BinPacker.fa Assemble.log BinPacker_Out_Dir
-if [ $Dir != $(pwd) ]; then
-  mv BinPacker_Out_Dir $Dir
+cd ..
+awk '!a[$0]++' $(Dir)/BinPacker_temp.fa >$(Dir)/Temp.fa
+mv $(Dir)/Temp.fa $(Dir)/BinPacker_temp.fa
+$shellpath/src/change_fasta $(Dir)/BinPacker_temp.fa $(Dir)/Temp.fa
+$shellpath/src/Find_errors $(Dir)/Temp.fa $(Dir)/BinPacker.fa
+rm $(Dir)/Temp.fa $(Dir)/BinPacker_temp.fa $(Dir)/Raw_New_Splicing_Graph.txt $(Dir)/log_temp
+rm -rf $(Dir)/RawGraphs
+else
+for file_a in ${PWD}/RawGraphs/*;
+do
+        cd $(Dir)/
+        temp_file=`basename $file_a`
+        echo "Processing Splicing Graph:" $temp_file "..."
+        $shellpath/src/BinPacker_denovo ./RawGraphs/$temp_file ./BinPacker_temp.fa 0 $duplicate
+done
+cd ..
+mv $(Dir)/BinPacker_temp.fa $(Dir)/BinPacker.fa
+rm -rf $(Dir)/RawGraphs
 fi
 echo "Congratulations! Your job is finished!"
+
+
+
+
+
+
