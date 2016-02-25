@@ -369,12 +369,14 @@ $shellpath/src/Find_errors $Dir/Temp.fa $Dir/BinPacker.fa
 rm $Dir/Temp.fa $Dir/BinPacker_temp.fa $Dir/log_temp
 rm -rf $Dir/RawGraphs
 else
+cd $Dir
 for file_a in $Dir/RawGraphs/*;
 do
         temp_file=`basename $file_a`
         echo "Processing Splicing Graph:" $temp_file "..."
         $shellpath/src/BinPacker_denovo ./RawGraphs/$temp_file ./BinPacker_temp.fa 0 $duplicate
 done
+cd ..
 mv $Dir/BinPacker_temp.fa $Dir/BinPacker.fa
 rm -rf $Dir/RawGraphs
 fi
