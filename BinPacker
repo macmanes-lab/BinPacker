@@ -1,5 +1,5 @@
 #!/bin/bash
-shellpath=`dirname $0`
+shellpath=$(dirname "$0")
 RunningMode="GLPK"
 mode="double_stranded_mode"
 pair="No_input"
@@ -187,9 +187,9 @@ if [ $pair == "pair" ]; then
     fi
     if [ $mode == "RF" ]; then
       echo "$shellpath/plugins/fastool/fastool --rev --to-fasta $left_reads >reads.left.fa"
-      $shellpath/plugins/fastool/fastool --rev --to-fasta $left_reads >$Dir/reads.left.fa
+	  $shellpath/plugins/seqtk seq -r -a $left_reads >$Dir/reads.left.fa
       echo "$shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa"
-      $shellpath/plugins/fastool/fastool --to-fasta $right_reads >$Dir/reads.right.fa
+	  $shellpath/plugins/seqtk seq -a $right_reads >$Dir/reads.right.fa
     fi
     if [ $mode == "FR" ]; then
       echo "$shellpath/plugins/fastool/fastool --to-fasta $left_reads >reads.left.fa"
@@ -299,20 +299,20 @@ do
                       $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_L.txt -o result_ILP_L.txt >log
 N=$[$N+1]
                       $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N no $low_cov $out_in_ratio $high_ratio
-                          N=0 
+                          N=0
                           rm raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
               $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
                           cp Line_Graph.txt Raw_Line_Graph.txt
             else
                   if [ -s raw_ILP_L.txt -a -e raw_ILP_L.txt ]; then
                           $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_L.txt -o result_ILP_L.txt >log
-              fi  
+              fi
                   if [ -s raw_ILP_R.txt -a -e raw_ILP_R.txt ]; then
                           $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_R.txt -o result_ILP_R.txt >log
-              fi  
+              fi
                   N=$[$N+1]
                   $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N yes $low_cov $out_in_ratio $high_ratio
-         fi  
+         fi
    done
     $shellpath/src/read_result ./RawGraphs/$temp_file Line_Graph.txt Result_L.txt Result_R.txt BinPacker_temp.fa
     rm New_Splicing_Graph.txt Line_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
@@ -320,22 +320,22 @@ N=$[$N+1]
         low_cov=10000000.0
     $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
         cp Line_Graph.txt Raw_Line_Graph.txt
-    N=0 
+    N=0
         num_left=0
         num_right=0
         if [ -s Line_Graph.txt -a -e Line_Graph.txt ]; then
             $shellpath/src/packing_num New_Splicing_Graph.txt Line_Graph.txt left >log || num_left=`cat log`
-            rm log 
+            rm log
             $shellpath/src/packing_num New_Splicing_Graph.txt Line_Graph.txt right >log || num_right=`cat log`
-            rm log 
-        fi  
+            rm log
+        fi
     while [ -s raw_ILP_L.txt -a -e raw_ILP_L.txt ] || [ -s raw_ILP_R.txt -a -e raw_ILP_R.txt ]
     do
                 if [[ $N -lt $num_left ]] && [ ! -s raw_ILP_L.txt -a -e raw_ILP_L.txt ]; then
                         $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_R.txt -o result_ILP_R.txt >log
                         N=$[$N+1]
                         $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N no $low_cov $out_in_ratio $high_ratio
-                        N=0 
+                        N=0
                         rm raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
                         $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
                     cp Line_Graph.txt Raw_Line_Graph.txt
@@ -343,20 +343,20 @@ N=$[$N+1]
                       $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_L.txt -o result_ILP_L.txt >log
                       N=$[$N+1]
                       $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N no $low_cov $out_in_ratio $high_ratio
-                          N=0 
+                          N=0
                           rm raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
               $shellpath/src/packing New_Splicing_Graph.txt New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 0 yes $low_cov $out_in_ratio $high_ratio
                           cp Line_Graph.txt Raw_Line_Graph.txt
             else
                   if [ -s raw_ILP_L.txt -a -e raw_ILP_L.txt ]; then
                           $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_L.txt -o result_ILP_L.txt >log
-              fi  
+              fi
                   if [ -s raw_ILP_R.txt -a -e raw_ILP_R.txt ]; then
                           $shellpath/glpk-4.40/examples/glpsol -m raw_ILP_R.txt -o result_ILP_R.txt >log
-              fi  
+              fi
                   N=$[$N+1]
                   $shellpath/src/packing ./RawGraphs/$temp_file New_Splicing_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt $N yes $low_cov $out_in_ratio $high_ratio
-         fi  
+         fi
    done
     $shellpath/src/read_result ./RawGraphs/$temp_file Line_Graph.txt Result_L.txt Result_R.txt BinPacker_temp.fa
     rm New_Splicing_Graph.txt Line_Graph.txt Raw_Line_Graph.txt raw_ILP_L.txt raw_ILP_R.txt result_ILP_L.txt result_ILP_R.txt Result_L.txt Result_R.txt 2>log_temp
@@ -381,9 +381,3 @@ mv $Dir/BinPacker_temp.fa $Dir/BinPacker.fa
 rm -rf $Dir/RawGraphs
 fi
 echo "Congratulations! Your job is finished!"
-
-
-
-
-
-
