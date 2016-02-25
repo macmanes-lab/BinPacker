@@ -370,7 +370,7 @@ rm $Dir/Temp.fa $Dir/BinPacker_temp.fa $Dir/log_temp
 rm -rf $Dir/RawGraphs
 else
 cd $Dir
-for file_a in $Dir/RawGraphs/*;
+for file_a in RawGraphs/*;
 do
         temp_file=`basename $file_a`
         echo "Processing Splicing Graph:" $temp_file "..."
