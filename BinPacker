@@ -366,7 +366,7 @@ awk '!a[$0]++' $Dir/BinPacker_temp.fa >$Dir/Temp.fa
 mv $Dir/Temp.fa $Dir/BinPacker_temp.fa
 $shellpath/src/change_fasta $Dir/BinPacker_temp.fa $Dir/Temp.fa
 $shellpath/src/Find_errors $Dir/Temp.fa $Dir/BinPacker.fa
-rm $Dir/Temp.fa $Dir/BinPacker_temp.fa $Dir/Raw_New_Splicing_Graph.txt $Dir/log_temp
+rm $Dir/Temp.fa $Dir/BinPacker_temp.fa $Dir/log_temp
 rm -rf $Dir/RawGraphs
 else
 for file_a in ${PWD}/RawGraphs/*;
