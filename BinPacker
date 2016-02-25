@@ -186,10 +186,10 @@ if [ $pair == "pair" ]; then
       $shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa
     fi
     if [ $mode == "RF" ]; then
-      echo "$shellpath/plugins/fastool/fastool --rev --to-fasta $left_reads >reads.left.fa"
-	  $shellpath/plugins/seqtk seq -r -a $left_reads >$Dir/reads.left.fa
-      echo "$shellpath/plugins/fastool/fastool --to-fasta $right_reads >reads.right.fa"
-	  $shellpath/plugins/seqtk seq -a $right_reads >$Dir/reads.right.fa
+      echo "$shellpath/plugins/seqtk/seqtk seq -r -a $left_reads >$Dir/reads.left.fa"
+	  $shellpath/plugins/seqtk/seqtk seq -r -a $left_reads >$Dir/reads.left.fa
+      echo "$shellpath/plugins/seqtk/seqtk seq -a $right_reads >$Dir/reads.right.fa"
+	  $shellpath/plugins/seqtk/seqtk seq -a $right_reads >$Dir/reads.right.fa
     fi
     if [ $mode == "FR" ]; then
       echo "$shellpath/plugins/fastool/fastool --to-fasta $left_reads >reads.left.fa"
