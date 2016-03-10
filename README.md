@@ -8,5 +8,5 @@ forked from https://sourceforge.net/projects/transcriptomeassembly/
 #### To run
 
 ```
-BinPacker -d -s fq -p pair -l ./sample_test/reads.left.fq -r ./sample_test/reads.right.fq -m RF -k 25 -g 200 -o test
+BinPacker -d -q -s fq -p pair -l ./sample_test/reads.left.fq -r ./sample_test/reads.right.fq -m RF -k 25 -g 200 -o test
 ```
