@@ -12,6 +12,7 @@ cd seqtk
 make -j4
 cd ../../
 echo PATH=$PATH:$(pwd):$(pwd)/plugins/seqtk >> ~/.profile
-echo $(pwd)
+echo LD_LIBRARY_PATH=/home/ubuntu/boost/lib/ >> ~/.profile
+source ~/.profile
 $(pwd)/BinPacker -d -q -s fq -p pair -l ./sample_test/reads.left.fq -r ./sample_test/reads.right.fq -m RF -k 25 -g 200 -o test
 rm -fr test
